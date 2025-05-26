@@ -1,13 +1,14 @@
-let currentIndex = 0;
-        function showImage(index) {
-            const images = document.getElementById('carouselImages');
-            const totalImages = images.children.length;
-            if (index < 0) 
-            {currentIndex = totalImages - 1;} 
-            else if (index >= totalImages)
-            {currentIndex = 0;}
-            else 
-            {currentIndex = index;}
-images.style.transform = `translateX(-${currentIndex * 500}px)`;}
-function nextImage() {showImage(currentIndex + 1);}
-function prevImage() {showImage(currentIndex - 1);}
+const carouselImages = document.querySelector('.carousel-images');
+    const images = document.querySelectorAll('.carousel-images img');
+    let index = 0;
+
+    function nextImage() {
+        index++;
+        if (index >= images.length) {
+            index = 0;
+        }
+        const offset = -index * 300;
+        carouselImages.style.transform = `translateX(${offset}px)`;
+    }
+
+    setInterval(nextImage, 3000);
