@@ -7,7 +7,7 @@ const carouselImages = document.querySelector('.carousel-images');
         if (index >= images.length) {
             index = 0;
         }
-        const offset = -index * 300;
+        const offset = -index * 100;
         carouselImages.style.transform = `translateX(${offset}px)`;
     }
 
