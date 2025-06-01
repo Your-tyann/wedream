@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0"> 
+<script src="carousel.js"></script>
+<link rel="stylesheet" type="text/css" href="astyle.css">
+<link rel="stylesheet" type="text/css" href="style.css">
+<link rel="icon" href="favicon/favicon-16x16.png" sizes="16x16" type="image/png">  
+<link rel="icon" href="favicon/favicon-32x32.png" sizes="32x32" type="image/png">
+<link rel="icon" href="favicon/android-chrome-192x192.png" sizes="192x92" type="image/png">  
+<link rel="icon" href="favicon/apple-touch-icon.png" sizes="180x180" type="image/png"> 
+<link rel="icon" type="image/x-icon" href="favicon/favicon.ico">
+    <title>Свадебный салон "Белый Лотос"</title>
+</head>
+<body>
+        <header>
+        <div class="logo">
+        <img src="favicon/android-chrome-192x192.png" alt="Логотип">
+        <span class="title">Белый Лотос</span>
+    </div>        
+</header>        
+    <nav>
+        <ul>
+            <li><a href="home.html">Главная</a></li>
+             <li><a href="assortiment.html">Ассортимент</a></li>
+                <li>
+                <div class="dropdown">
+                    <button class="unstyled-button">Дополнительный услуги</button>
+                        <div class="dropdown-content">
+                            <a href="photos.html">Фотограф</a>
+                            <a href="makeup.html">Визажист</a>
+                            <a href="hair.html">Парикмахер</a>                            
+                            <a href="cheremony.html">Церемония</a>
+                            <a href="flowers.html">Флористика</a>  
+                        </div>
+                </div>
+                </a></li>
+            <li><a href="contacts.html">Связаться с нами</a></li>
+        </ul>
+    </nav>  
+    <div id="app">
+        <!-- Иконка корзины -->
+        <div class="cart-icon" @click="toggleCart">
+            🛒
+
+        </div>
+        
+        <!-- Боковая панель корзины -->
+        <div class="cart-sidebar" :class="{active: cartVisible}">
+            <div class="cart-header">
+                <h2>Ваша корзина</h2>
+                <button class="close-cart" @click="toggleCart">&times;</button>
+            </div>
+            
+            <div v-if="cart.length > 0">
+                <div class="cart-item" v-for="(item, index) in cart" :key="index">
+                    <img :src="item.image" :alt="item.title" class="cart-item-image">
+                    <div class="cart-item-details">
+                        <div class="cart-item-title">{{ item.title }}</div>
+                        <div class="cart-item-price">{{ item.price }} ₽</div>
+                        <div>Размер: {{ item.selectedSize || 'не выбран' }}</div>
+                        <button class="cart-item-remove" @click="removeFromCart(index)">Удалить</button>
+                    </div>
+                </div>
+                
+                <div class="cart-total">
+                    Итого: {{ cartTotal }} ₽
+                </div>
+                
+                <button class="checkout-btn" @click="checkout">Оформить заказ</button>
+            </div>
+            
+            <div v-else>
+                <p>Ваша корзина пуста</p>
+            </div>
+        </div>
+        
+        <!-- Главная страница -->
+        <div class="container" v-if="!currentProduct">
+            <h1>Наша свадебная коллекция</h1>
+            
+            <div class="categories">
+                <button 
+                    v-for="category in categories" 
+                    :key="category.id"
+                    @click="filterByCategory(category.id)"
+                    :class="['category-btn', {active: activeCategory === category.id}]"
+                >
+                    {{ category.name }}
+                </button>
+            </div>
+            
+            <div class="products-grid">
+                <div class="product-card" v-for="product in filteredProducts" :key="product.id">
+                    <div class="product-badge" v-if="product.isNew">Новинка</div>
+                    <img :src="product.image" :alt="product.title" class="product-image">
+                    <div class="product-info">
+                        <h3 class="product-title">{{ product.title }}</h3>
+                        <div class="product-price">{{ product.price }} ₽</div>
+                        <div class="product-actions">
+                            <button class="btn btn-primary" @click="addToCart(product)">В корзину</button>
+                            <button class="btn btn-outline" @click="viewProduct(product)">Подробнее</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Страница товара -->
+        <div class="container" v-if="currentProduct">
+            <a href="#" class="back-btn" @click.prevent="backToCatalog">&larr; Назад в каталог</a>
+            
+            <div class="product-page">
+                <div class="product-gallery">
+                    <img :src="currentImage" :alt="currentProduct.title" class="main-image">
+                    <div class="thumbnails">
+                        <img 
+                            v-for="(img, index) in currentProduct.images" 
+                            :key="index"
+                            :src="img" 
+                            :alt="'Фото ' + (index + 1)"
+                            class="thumbnail"
+                            :class="{active: currentImage === img}"
+                            @click="currentImage = img"
+                        >
+                    </div>
+                </div>
+                
+                <div class="product-details">
+                    <h2>{{ currentProduct.title }}</h2>
+                    <div class="product-price">{{ currentProduct.price }} ₽</div>
+                    
+                    <div class="product-description">
+                        {{ currentProduct.description }}
+                    </div>
+                    
+                    <div class="product-options" v-if="currentProduct.sizes">
+                        <h4>Размер:</h4>
+                        <select v-model="selectedSize">
+                            <option value="">Выберите размер</option>
+                            <option v-for="size in currentProduct.sizes" :key="size" :value="size">{{ size }}</option>
+                        </select>
+                    </div>
+                    
+                    <button class="btn btn-primary" @click="addToCart(currentProduct)" style="width: 100%;">
+                        Добавить в корзину
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.6.14/dist/vue.js"></script>
+    <script>
+        new Vue({
+            el: '#app',
+            data: {
+                activeCategory: 'all',
+                categories: [
+                    { id: 'all', name: 'Все' },
+                    { id: 'dresses', name: 'Платья' },
+                    { id: 'suits', name: 'Костюмы' },
+                ],
+                products: [
+                    {
+                        id: 1,
+                        title: 'Свадебное платье "Ангел"',
+                        price: 45900,
+                        category: 'dresses',
+                        image: 'https://i.pinimg.com/736x/72/9a/5b/729a5b20f69175c46cfcd950c6bd1105.jpg',
+                        images: [
+                            'https://i.pinimg.com/736x/72/9a/5b/729a5b20f69175c46cfcd950c6bd1105.jpg'
+                        ],
+                        description: 'потрясающее свадебное платье с длинным рукавом, сочетающие в себе элегантность и стиль. ',
+                        sizes: ['40', '42', '44', '46', '48', '50', '52', '54'],
+                        isNew: true
+                    },
+                    {
+                        id: 2,
+                        title: 'Костюм жениха "Престиж"',
+                        price: 28900,
+                        category: 'suits',
+                        image: 'https://i.pinimg.com/736x/11/70/08/1170083b785d8b8c1bb82542844f35e1.jpg',
+                        images: [
+                            'https://i.pinimg.com/736x/11/70/08/1170083b785d8b8c1bb82542844f35e1.jpg',
+                        ],
+                        description: 'Классический тройной костюм из итальянской шерсти. В комплекте жилет и галстук в тон.',
+                        sizes: ['46', '48', '50', '52', '54'],
+                        isNew: false
+                    },
+                    {
+                        id: 3,
+                        title: 'Свадебное платье "Её высочество"',
+                        price: 89000,
+                        category: 'dresses',
+                        image: 'https://i.pinimg.com/736x/78/53/6f/78536f98b52a9c80de0e5644ced5cd31.jpg',
+                        images: [
+                            'https://i.pinimg.com/736x/78/53/6f/78536f98b52a9c80de0e5644ced5cd31.jpg',
+                        ],
+                        description: 'Элегантное свадебное платье принцессы из атласа, расшитое бисером, с пышными рукавами. Неподвластный времени силуэт бального платья с квадратным вырезом придает классическую изысканность. Лиф украшен нежным бисером, создающим потрясающий визуальный эффект. Съемные пышные рукава придают изделию романтический и царственный вид, идеально подходящий для образа в стиле принцессы',
+                        sizes: ['40', '42', '44', '46', '48', '50', '52', '54'],
+                        isNew: true
+                    },
+                    
+                    {
+                        id: 4,
+                        title: 'Костюм жениха "Вайт"',
+                        price: 29000,
+                        category: 'suits',
+                        image: 'https://i.pinimg.com/736x/d2/52/03/d252036b8235688435c57e2593f0ccd8.jpg',
+                        images: [
+                            'https://i.pinimg.com/736x/d2/52/03/d252036b8235688435c57e2593f0ccd8.jpg'
+                        ],
+                        description: 'Классический свадебный костюм молочного оттенка',
+                        sizes: ['46', '48', '50', '52'],
+                        isNew: true
+                    },
+                    {
+                        id: 5,
+                        title: 'Свадебное платье "Нежность"',
+                        price: 52900,
+                        category: 'dresses',
+                        image: 'https://i.pinimg.com/736x/da/ea/12/daea12011d3e9d1e9c65cd7aeb824d0d.jpg',
+                        images: [
+                            'https://i.pinimg.com/736x/da/ea/12/daea12011d3e9d1e9c65cd7aeb824d0d.jpg',
+                        ],
+                        description: 'Платье в стиле ампир с завышенной талией и открытыми плечами. Изготовлено из французского шелка.',
+                        sizes: ['40', '42', '44', '46'],
+                        isNew: false
+                    },
+                    {
+                        id: 6,
+                        title: 'Костюм жениха "Элегант"',
+                        price: 34900,
+                        category: 'suits',
+                        image: 'https://i.pinimg.com/736x/a6/e3/fb/a6e3fbaf5ea74a3396c628dea12971a6.jpg',
+                        images: [
+                            'https://i.pinimg.com/736x/a6/e3/fb/a6e3fbaf5ea74a3396c628dea12971a6.jpg',
+                        ],
+                        description: 'Современный приталенный костюм с узкими лацканами. В комплекте пояс и запонки.',
+                        sizes: ['46', '48', '50', '52'],
+                        isNew: false
+                    }
+                ],
+                currentProduct: null,
+                currentImage: '',
+                selectedSize: '',
+                cart: [],
+                cartVisible: false
+            },
+            computed: {
+                filteredProducts() {
+                    if (this.activeCategory === 'all') {
+                        return this.products;
+                    }
+                    return this.products.filter(product => product.category === this.activeCategory);
+                },
+                cartTotal() {
+                    return this.cart.reduce((total, item) => total + item.price, 0);
+                }
+            },
+            methods: {
+                filterByCategory(categoryId) {
+                    this.activeCategory = categoryId;
+                },
+                viewProduct(product) {
+                    this.currentProduct = product;
+                    this.currentImage = product.images[0];
+                    this.selectedSize = '';
+                    window.scrollTo(0, 0);
+                },
+                backToCatalog() {
+                    this.currentProduct = null;
+                },
+                addToCart(product) {
+                    const cartItem = {
+                        ...product,
+                        selectedSize: this.selectedSize
+                    };
+                    this.cart.push(cartItem);
+                    this.selectedSize = '';
+                    this.cartVisible = true;
+                },
+                removeFromCart(index) {
+                    this.cart.splice(index, 1);
+                },
+                toggleCart() {
+                    this.cartVisible = !this.cartVisible;
+                },
+                checkout() {
+                    alert(`Заказ оформлен! Сумма: ${this.cartTotal} ₽`);
+                    this.cart = [];
+                    this.cartVisible = false;
+                }
+            }
+        });
+    </script>
+    <footer>
+<p>&copy; Дебеш & Ониквич, 2025</p>
+    </footer>
+</body>
+</html>
